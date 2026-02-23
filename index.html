@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GBI TO Worship Team Scheduler</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f1923; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #7a5f25; border-radius: 3px; }
+    select option { background: #1c2d3f; color: #e8dcc8; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)} }
+    .fu { animation: fadeUp 0.35s ease forwards; }
+    input:focus, select:focus { outline: 1px solid #d4a843 !important; }
+    .hg:hover { border-color: #d4a843 !important; }
+    .bp { transition: filter 0.15s, transform 0.15s; }
+    .bp:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+    .bp:disabled { opacity: 0.45; cursor: not-allowed; }
+    .sc { transition: transform 0.2s, box-shadow 0.2s; }
+    .sc:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(212,168,67,0.08); }
+    .role-chip { transition: all 0.15s; cursor: pointer; user-select: none; }
+    .role-chip:hover { border-color: #d4a843 !important; }
+    .member-chip { transition: all 0.15s; cursor: pointer; user-select: none; }
+    .member-chip:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const LOGO = "data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAQ4BDgDASIAAhEBAxEB/8QAHAABAAMBAQEBAQAAAAAAAAAAAAcICQYFBAMC/8QATxABAAEDAgIECQkFAgsIAwAAAAECAwQFBgcRCBIhlRgxOEFRV2F00xMXIjJxgbO00gkUI0JScpEVMzdUVmKCoaKl0SQlU3N1doOxNUOS/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AKZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//9k=";
+    const ROLES = ["Worship Leader", "Vocalist", "Guitarist", "Keys/Piano", "Drummer", "Bassist", "Violin"];
+    const ROLE_ICONS = { "Worship Leader":"\u{1F3A4}","Vocalist":"\u{1F3B5}","Guitarist":"\u{1F3B8}","Keys/Piano":"\u{1F3B9}","Drummer":"\u{1F941}","Bassist":"\u{1F3B8}","Violin":"\u{1F3BB}" };
+    const C = { bg:"#0f1923",surface:"#162130",card:"#1c2d3f",border:"#243447",gold:"#d4a843",goldLight:"#f0c96a",goldDim:"#7a5f25",text:"#e8dcc8",muted:"#8a9ab0",success:"#4a9e7f",danger:"#c05e5e" };
+
+    const MONTHS = [];
+    for (let y = 2026; y <= 2030; y++) {
+      for (let m = 0; m < 12; m++) {
+        const d = new Date(y, m, 1);
+        MONTHS.push({ year: y, month: m, label: d.toLocaleDateString("en-US", { month: "long", year: "numeric" }), value: y+"-"+m });
+      }
+    }
+    const DEFAULT_MONTH_IDX = MONTHS.findIndex(m => m.year === 2026 && m.month === 1);
+
+    function getSundays(y,m){const a=[];const d=new Date(y,m,1);while(d.getDay()!==0)d.setDate(d.getDate()+1);while(d.getMonth()===m){a.push(new Date(d));d.setDate(d.getDate()+7);}return a;}
+    function toDS(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+    function fmtShort(d){return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});}
+    function mk(y,m){return y+"-"+m;}
+
+    const IS = {width:"100%",display:"block",padding:"12px 15px",background:"#1c2d3f",border:"1px solid #243447",borderRadius:8,color:"#e8dcc8",fontSize:16,fontFamily:"'Crimson Pro',Georgia,serif"};
+    const TH = {padding:"11px 18px",textAlign:"left",fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:"0.16em",color:"#8a9ab0",fontWeight:600};
+    const LBL = {fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:"0.18em",color:"#8a9ab0",marginBottom:8,display:"block"};
+
+    function MonthSelect({ value, onChange, label }) {
+      const grouped = {};
+      MONTHS.forEach((m, i) => {
+        if (!grouped[m.year]) grouped[m.year] = [];
+        grouped[m.year].push({ ...m, idx: i });
+      });
+      return (
+        <div>
+          <span style={LBL}>{label}</span>
+          <select value={value} onChange={e => onChange(Number(e.target.value))} style={{ ...IS, marginBottom: 0, cursor: "pointer" }}>
+            {Object.entries(grouped).map(([year, months]) => (
+              <optgroup key={year} label={"── " + year + " ──"}>
+                {months.map(m => <option key={m.value} value={m.idx}>{m.label}</option>)}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    function App() {
+      const [tab, setTab] = useState("submit");
+      const [subs, setSubs] = useState([]);
+      const [schedule, setSchedule] = useState(null);
+      const [selected, setSelected] = useState({});
+      const [smi, setSmi] = useState(DEFAULT_MONTH_IDX);
+      const [vmi, setVmi] = useState(DEFAULT_MONTH_IDX);
+      const [name, setName] = useState("");
+      const [roles, setRoles] = useState([]);
+      const [unavail, setUnavail] = useState([]);
+      const [toast, setToast] = useState(null);
+
+      const sm = MONTHS[smi]; const vm = MONTHS[vmi];
+      const smS = getSundays(sm.year, sm.month);
+      const vmS = getSundays(vm.year, vm.month);
+      const vmSubs = subs.filter(s => s.mk === mk(vm.year, vm.month));
+
+      useEffect(() => {
+        try { const r = localStorage.getItem("wt5"); if (r) setSubs(JSON.parse(r)); } catch(e) {}
+      }, []);
+
+      function save(n) { setSubs(n); try { localStorage.setItem("wt5", JSON.stringify(n)); } catch(e) {} }
+      function toggleRole(r) { setRoles(p => p.includes(r) ? p.filter(x => x !== r) : [...p, r]); }
+      function toggleDate(ds) { setUnavail(p => p.includes(ds) ? p.filter(x => x !== ds) : [...p, ds]); }
+      function toggleMember(ds, role, memberName) {
+        const key = ds + "|" + role;
+        setSelected(prev => {
+          const current = prev[key] || [];
+          const next = current.includes(memberName) ? current.filter(n => n !== memberName) : [...current, memberName];
+          return { ...prev, [key]: next };
+        });
+      }
+
+      function handleSubmit() {
+        if (!name.trim() || roles.length === 0) return;
+        const key = mk(sm.year, sm.month);
+        const e = { id: Date.now(), name: name.trim(), roles, mk: key, unavail };
+        save([...subs.filter(s => !(s.name.toLowerCase() === name.trim().toLowerCase() && s.mk === key)), e]);
+        setToast("\u2713 Saved " + name.trim() + "'s availability for " + sm.label);
+        setName(""); setRoles([]); setUnavail([]);
+        setTimeout(() => setToast(null), 4000);
+      }
+
+      function generate() {
+        const key = mk(vm.year, vm.month);
+        const rel = subs.filter(s => s.mk === key);
+        const newSchedule = vmS.map(sun => {
+          const ds = toDS(sun);
+          const slots = Object.fromEntries(ROLES.map(r => [r, rel.filter(s => s.roles.includes(r) && !s.unavail.includes(ds)).map(s => s.name)]));
+          return { sun, ds, slots };
+        });
+        const initSelected = {};
+        newSchedule.forEach(({ ds, slots }) => {
+          ROLES.forEach(r => { initSelected[ds + "|" + r] = [...slots[r]]; });
+        });
+        setSchedule(newSchedule);
+        setSelected(initSelected);
+      }
+
+      return (
+        <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Crimson Pro',Georgia,serif" }}>
+          {/* HEADER */}
+          <header style={{ background:"linear-gradient(180deg,#08121c,"+C.surface+")", borderBottom:"1px solid "+C.border }}>
+            <div style={{ maxWidth:980, margin:"0 auto", padding:"26px 24px 0" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:20 }}>
+                <img src={LOGO} alt="GBI TO Logo" style={{ width:48, height:48, borderRadius:"50%", objectFit:"cover", flexShrink:0, boxShadow:"0 0 18px rgba(212,168,67,0.3)", border:"1px solid "+C.border }} />
+                <div>
+                  <h1 style={{ fontFamily:"'Cinzel',serif", fontSize:20, fontWeight:700, color:C.goldLight, letterSpacing:"0.14em", lineHeight:1 }}>GBI TO Worship Team</h1>
+                  <p style={{ fontFamily:"'Cinzel',serif", fontSize:10, color:C.muted, letterSpacing:"0.22em", marginTop:4 }}>SCHEDULING PORTAL</p>
+                </div>
+              </div>
+              <nav style={{ display:"flex", borderTop:"1px solid "+C.border }}>
+                {[["submit","Submit Availability"],["schedule","View Schedule"]].map(([k,l]) => (
+                  <button key={k} onClick={() => setTab(k)} style={{ padding:"13px 26px", background:"none", border:"none", borderBottom:"2px solid "+(tab===k?C.gold:"transparent"), color:tab===k?C.goldLight:C.muted, fontFamily:"'Cinzel',serif", fontSize:11, letterSpacing:"0.16em", cursor:"pointer" }}>{l}</button>
+                ))}
+              </nav>
+            </div>
+          </header>
+
+          <main style={{ maxWidth:980, margin:"0 auto", padding:"36px 24px 60px" }}>
+
+            {/* SUBMIT TAB */}
+            {tab==="submit" && (
+              <div className="fu" style={{ maxWidth:560, margin:"0 auto" }}>
+                <h2 style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:C.gold, letterSpacing:"0.1em", marginBottom:6 }}>Submit Your Availability</h2>
+                <p style={{ color:C.muted, fontSize:16, lineHeight:1.65, marginBottom:28 }}>Select your roles and mark the Sundays you <em>cannot</em> serve. Leave all dates unchecked if you're free the whole month.</p>
+
+                {toast && <div style={{ marginBottom:22, padding:"13px 18px", borderRadius:8, background:"rgba(74,158,127,0.14)", border:"1px solid "+C.success, color:C.success, fontSize:15 }}>{toast}</div>}
+
+                <span style={LBL}>YOUR NAME</span>
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Sarah Johnson" style={{ ...IS, marginBottom:20 }} />
+
+                <span style={LBL}>YOUR ROLE(S) <span style={{ color:C.goldDim, fontSize:9 }}>— SELECT ALL THAT APPLY</span></span>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:9, marginBottom:6 }}>
+                  {ROLES.map(r => {
+                    const on = roles.includes(r);
+                    return (
+                      <div key={r} className="role-chip" onClick={() => toggleRole(r)} style={{ padding:"9px 16px", borderRadius:24, border:"1.5px solid "+(on?C.gold:C.border), background:on?"rgba(212,168,67,0.14)":C.card, color:on?C.goldLight:C.muted, fontSize:14, display:"flex", alignItems:"center", gap:7 }}>
+                        <span>{ROLE_ICONS[r]}</span><span>{r}</span>{on && <span style={{ fontSize:11, color:C.gold }}>✓</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {roles.length===0 && name.trim() && <p style={{ fontSize:13, color:C.danger, marginBottom:14, fontStyle:"italic" }}>Please select at least one role.</p>}
+                <div style={{ marginBottom:20 }} />
+
+                <div style={{ marginBottom:22 }}>
+                  <MonthSelect value={smi} onChange={i => { setSmi(i); setUnavail([]); }} label="MONTH" />
+                </div>
+
+                <span style={LBL}>SUNDAYS I CANNOT SERVE</span>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:28 }}>
+                  {smS.map(s => {
+                    const ds = toDS(s); const on = unavail.includes(ds);
+                    return (
+                      <div key={ds} className="hg" onClick={() => toggleDate(ds)} style={{ display:"flex", alignItems:"center", gap:12, padding:"13px 15px", borderRadius:8, border:"1px solid "+(on?C.danger:C.border), background:on?"rgba(192,94,94,0.1)":C.card, cursor:"pointer", userSelect:"none" }}>
+                        <div style={{ width:20, height:20, borderRadius:4, border:"2px solid "+(on?C.danger:C.muted), background:on?C.danger:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          {on && <span style={{ color:"#fff", fontSize:12, fontWeight:700 }}>✕</span>}
+                        </div>
+                        <div>
+                          <div style={{ fontSize:15, color:on?"#e88":C.text }}>{fmtShort(s)}</div>
+                          <div style={{ fontSize:12, color:C.muted }}>Sunday</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button className="bp" onClick={handleSubmit} disabled={!name.trim()||roles.length===0} style={{ width:"100%", padding:"15px", borderRadius:10, border:"none", background:"linear-gradient(130deg,"+C.gold+",#b8893a)", color:"#080500", fontFamily:"'Cinzel',serif", fontSize:13, fontWeight:700, letterSpacing:"0.18em", cursor:"pointer", boxShadow:"0 4px 20px rgba(212,168,67,0.25)" }}>
+                  SAVE AVAILABILITY
+                </button>
+
+                {subs.filter(s => s.mk===mk(sm.year,sm.month)).length > 0 && (
+                  <div style={{ marginTop:26, padding:"16px 18px", background:C.surface, borderRadius:10, border:"1px solid "+C.border }}>
+                    <p style={{ fontFamily:"'Cinzel',serif", fontSize:10, letterSpacing:"0.18em", color:C.muted, marginBottom:12 }}>SUBMITTED FOR {sm.label.toUpperCase()}</p>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+                      {subs.filter(s => s.mk===mk(sm.year,sm.month)).map(s => (
+                        <span key={s.id} style={{ padding:"5px 13px", borderRadius:20, background:"rgba(212,168,67,0.1)", border:"1px solid "+C.goldDim, fontSize:13, color:C.gold }}>
+                          {s.roles.map(r => ROLE_ICONS[r]).join("")} {s.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SCHEDULE TAB */}
+            {tab==="schedule" && (
+              <div className="fu">
+                <div style={{ display:"flex", flexWrap:"wrap", gap:14, alignItems:"flex-end", justifyContent:"space-between", marginBottom:28 }}>
+                  <div>
+                    <h2 style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:C.gold, letterSpacing:"0.1em", marginBottom:5 }}>Schedule Generator</h2>
+                    <p style={{ color:C.muted, fontSize:15 }}>{vmSubs.length} member{vmSubs.length!==1?"s":""} submitted for {vm.label}</p>
+                  </div>
+                  <div style={{ display:"flex", gap:10, alignItems:"flex-end", flexWrap:"wrap" }}>
+                    <div style={{ minWidth:200 }}>
+                      <MonthSelect value={vmi} onChange={i => { setVmi(i); setSchedule(null); setSelected({}); }} label="SELECT MONTH" />
+                    </div>
+                    <button onClick={generate} style={{ padding:"12px 22px", background:"linear-gradient(130deg,"+C.gold+",#b8893a)", border:"none", borderRadius:8, color:"#080500", fontFamily:"'Cinzel',serif", fontSize:11, fontWeight:700, letterSpacing:"0.14em", cursor:"pointer", height:47 }}>GENERATE</button>
+                    {vmSubs.length > 0 && (
+                      <button onClick={() => { save(subs.filter(s => s.mk!==mk(vm.year,vm.month))); setSchedule(null); setSelected({}); }} style={{ padding:"12px 16px", background:"transparent", border:"1px solid "+C.danger, borderRadius:8, color:C.danger, fontFamily:"'Cinzel',serif", fontSize:11, cursor:"pointer", height:47 }}>CLEAR</button>
+                    )}
+                  </div>
+                </div>
+
+                {!schedule && (
+                  <div style={{ textAlign:"center", padding:"64px 0", color:C.muted }}>
+                    <div style={{ fontSize:52, opacity:0.3, marginBottom:18 }}>🗓</div>
+                    <p style={{ fontFamily:"'Cinzel',serif", fontSize:12, letterSpacing:"0.15em" }}>SELECT A MONTH AND CLICK GENERATE</p>
+                  </div>
+                )}
+
+                {schedule && (
+                  <>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat("+Math.min(schedule.length,4)+",1fr)", gap:16, marginBottom:36 }}>
+                      {schedule.map(({ sun, ds, slots }) => (
+                        <div key={ds} className="sc" style={{ background:C.card, border:"1px solid "+C.border, borderRadius:12, overflow:"hidden" }}>
+                          <div style={{ padding:"15px 17px", background:"linear-gradient(135deg,rgba(212,168,67,0.14),rgba(212,168,67,0.04))", borderBottom:"1px solid "+C.border }}>
+                            <p style={{ fontFamily:"'Cinzel',serif", fontSize:10, color:C.gold, letterSpacing:"0.2em" }}>SUNDAY</p>
+                            <p style={{ fontFamily:"'Cinzel',serif", fontSize:19, color:C.goldLight, marginTop:3 }}>{fmtShort(sun)}</p>
+                          </div>
+                          <div style={{ padding:"13px 17px" }}>
+                            {ROLES.map((r, ri) => {
+                              const slotKey = ds + "|" + r;
+                              const picked = selected[slotKey] || [];
+                              const available = slots[r];
+                              const hasMultiple = available.length > 1;
+                              return (
+                                <div key={r} style={{ marginBottom:ri<ROLES.length-1?10:0, paddingBottom:ri<ROLES.length-1?10:0, borderBottom:ri<ROLES.length-1?"1px solid "+C.border:"none" }}>
+                                  <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
+                                    <p style={{ fontFamily:"'Cinzel',serif", fontSize:9, color:C.muted, letterSpacing:"0.12em" }}>{ROLE_ICONS[r]} {r.toUpperCase()}</p>
+                                    {hasMultiple && <span style={{ fontSize:9, color:C.gold, fontFamily:"'Cinzel',serif", letterSpacing:"0.08em" }}>TAP TO PICK</span>}
+                                  </div>
+                                  {available.length > 0
+                                    ? <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                                        {available.map(m => {
+                                          const isOn = picked.includes(m);
+                                          return (
+                                            <span key={m} className="member-chip" onClick={() => toggleMember(ds, r, m)} style={{ fontSize:12, padding:"4px 10px", borderRadius:20, background:isOn?"rgba(74,127,165,0.25)":"rgba(255,255,255,0.04)", border:isOn?"1px solid rgba(74,127,165,0.6)":"1px solid rgba(255,255,255,0.1)", color:isOn?"#8dc4e8":"rgba(200,200,200,0.3)", textDecoration:isOn?"none":"line-through" }}>
+                                              {isOn ? "✓ " : ""}{m}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    : <span style={{ fontSize:12, color:C.danger, fontStyle:"italic" }}>No one available</span>
+                                  }
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {vmSubs.length > 0 && (
+                      <>
+                        <p style={{ fontFamily:"'Cinzel',serif", fontSize:10, letterSpacing:"0.18em", color:C.muted, marginBottom:14 }}>FULL AVAILABILITY MATRIX — {vm.label.toUpperCase()}</p>
+                        <div style={{ background:C.surface, border:"1px solid "+C.border, borderRadius:12, overflow:"auto" }}>
+                          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:14 }}>
+                            <thead>
+                              <tr style={{ background:C.card }}>
+                                <th style={TH}>NAME</th>
+                                <th style={TH}>ROLES</th>
+                                {vmS.map(s => <th key={toDS(s)} style={{ ...TH, textAlign:"center" }}>{fmtShort(s)}</th>)}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {vmSubs.map((s, idx) => (
+                                <tr key={s.id} style={{ borderTop:"1px solid "+C.border, background:idx%2===0?"transparent":"rgba(255,255,255,0.018)" }}>
+                                  <td style={{ padding:"11px 18px", color:C.text, whiteSpace:"nowrap" }}>{s.name}</td>
+                                  <td style={{ padding:"11px 18px", minWidth:160 }}>
+                                    <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                                      {s.roles.map(r => (
+                                        <span key={r} style={{ fontSize:11, padding:"2px 8px", borderRadius:20, background:"rgba(212,168,67,0.1)", border:"1px solid "+C.goldDim, color:C.gold, whiteSpace:"nowrap" }}>
+                                          {ROLE_ICONS[r]} {r}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </td>
+                                  {vmS.map(sun => {
+                                    const ds2 = toDS(sun); const bad = s.unavail.includes(ds2);
+                                    return (
+                                      <td key={ds2} style={{ padding:"11px 14px", textAlign:"center" }}>
+                                        <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:26, height:26, borderRadius:"50%", fontSize:12, fontWeight:700, background:bad?"rgba(192,94,94,0.18)":"rgba(74,158,127,0.18)", border:"1px solid "+(bad?"rgba(192,94,94,0.4)":"rgba(74,158,127,0.4)"), color:bad?C.danger:C.success }}>
+                                          {bad?"✕":"✓"}
+                                        </span>
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </main>
+
+          <footer style={{ textAlign:"center", padding:"22px", borderTop:"1px solid "+C.border, color:C.muted }}>
+            <span style={{ fontFamily:"'Cinzel',serif", fontSize:10, letterSpacing:"0.18em" }}>GBI TO WORSHIP TEAM SCHEDULER</span>
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
