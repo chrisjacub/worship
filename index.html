@@ -32,6 +32,26 @@
 </head>
 <body>
   <div id="root"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBEGtkWxr2Dm7DPoBd7xfCCjEMs-26B0Xg",
+      authDomain: "worship-scheduler-e9882.firebaseapp.com",
+      projectId: "worship-scheduler-e9882",
+      storageBucket: "worship-scheduler-e9882.firebasestorage.app",
+      messagingSenderId: "634238798240",
+      appId: "1:634238798240:web:c41b240c7870d16787bcc5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.__firebase = { db, collection, doc, setDoc, deleteDoc, onSnapshot };
+  </script>
+
   <script type="text/babel">
     const { useState, useEffect } = React;
 
@@ -89,17 +109,36 @@
       const [roles, setRoles] = useState([]);
       const [unavail, setUnavail] = useState([]);
       const [toast, setToast] = useState(null);
+      const [loading, setLoading] = useState(true);
 
       const sm = MONTHS[smi]; const vm = MONTHS[vmi];
       const smS = getSundays(sm.year, sm.month);
       const vmS = getSundays(vm.year, vm.month);
       const vmSubs = subs.filter(s => s.mk === mk(vm.year, vm.month));
 
+      // Listen to Firebase in real time
       useEffect(() => {
-        try { const r = localStorage.getItem("wt5"); if (r) setSubs(JSON.parse(r)); } catch(e) {}
+        const { db, collection, onSnapshot } = window.__firebase;
+        const unsub = onSnapshot(collection(db, "submissions"), (snapshot) => {
+          const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          setSubs(data);
+          setLoading(false);
+        });
+        return () => unsub();
       }, []);
 
-      function save(n) { setSubs(n); try { localStorage.setItem("wt5", JSON.stringify(n)); } catch(e) {} }
+      async function save(entry) {
+        const { db, doc, setDoc } = window.__firebase;
+        const docId = entry.name.toLowerCase().replace(/\s+/g, "-") + "-" + entry.mk;
+        await setDoc(doc(db, "submissions", docId), entry);
+      }
+
+      async function deleteSub(sub) {
+        const { db, doc, deleteDoc } = window.__firebase;
+        const docId = sub.name.toLowerCase().replace(/\s+/g, "-") + "-" + sub.mk;
+        await deleteDoc(doc(db, "submissions", docId));
+      }
+
       function toggleRole(r) { setRoles(p => p.includes(r) ? p.filter(x => x !== r) : [...p, r]); }
       function toggleDate(ds) { setUnavail(p => p.includes(ds) ? p.filter(x => x !== ds) : [...p, ds]); }
       function toggleMember(ds, role, memberName) {
@@ -111,11 +150,11 @@
         });
       }
 
-      function handleSubmit() {
+      async function handleSubmit() {
         if (!name.trim() || roles.length === 0) return;
         const key = mk(sm.year, sm.month);
-        const e = { id: Date.now(), name: name.trim(), roles, mk: key, unavail };
-        save([...subs.filter(s => !(s.name.toLowerCase() === name.trim().toLowerCase() && s.mk === key)), e]);
+        const entry = { name: name.trim(), roles, mk: key, unavail, updatedAt: Date.now() };
+        await save(entry);
         setToast("\u2713 Saved " + name.trim() + "'s availability for " + sm.label);
         setName(""); setRoles([]); setUnavail([]);
         setTimeout(() => setToast(null), 4000);
@@ -135,6 +174,13 @@
         });
         setSchedule(newSchedule);
         setSelected(initSelected);
+      }
+
+      async function clearMonth() {
+        const key = mk(vm.year, vm.month);
+        const toDelete = subs.filter(s => s.mk === key);
+        await Promise.all(toDelete.map(s => deleteSub(s)));
+        setSchedule(null); setSelected({});
       }
 
       return (
@@ -159,8 +205,14 @@
 
           <main style={{ maxWidth:980, margin:"0 auto", padding:"36px 24px 60px" }}>
 
+            {loading && (
+              <div style={{ textAlign:"center", padding:"64px 0", color:C.muted }}>
+                <p style={{ fontFamily:"'Cinzel',serif", fontSize:12, letterSpacing:"0.15em" }}>CONNECTING TO DATABASE...</p>
+              </div>
+            )}
+
             {/* SUBMIT TAB */}
-            {tab==="submit" && (
+            {!loading && tab==="submit" && (
               <div className="fu" style={{ maxWidth:560, margin:"0 auto" }}>
                 <h2 style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:C.gold, letterSpacing:"0.1em", marginBottom:6 }}>Submit Your Availability</h2>
                 <p style={{ color:C.muted, fontSize:16, lineHeight:1.65, marginBottom:28 }}>Select your roles and mark the Sundays you <em>cannot</em> serve. Leave all dates unchecked if you're free the whole month.</p>
@@ -214,8 +266,8 @@
                   <div style={{ marginTop:26, padding:"16px 18px", background:C.surface, borderRadius:10, border:"1px solid "+C.border }}>
                     <p style={{ fontFamily:"'Cinzel',serif", fontSize:10, letterSpacing:"0.18em", color:C.muted, marginBottom:12 }}>SUBMITTED FOR {sm.label.toUpperCase()}</p>
                     <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
-                      {subs.filter(s => s.mk===mk(sm.year,sm.month)).map(s => (
-                        <span key={s.id} style={{ padding:"5px 13px", borderRadius:20, background:"rgba(212,168,67,0.1)", border:"1px solid "+C.goldDim, fontSize:13, color:C.gold }}>
+                      {subs.filter(s => s.mk===mk(sm.year,sm.month)).map((s,i) => (
+                        <span key={i} style={{ padding:"5px 13px", borderRadius:20, background:"rgba(212,168,67,0.1)", border:"1px solid "+C.goldDim, fontSize:13, color:C.gold }}>
                           {s.roles.map(r => ROLE_ICONS[r]).join("")} {s.name}
                         </span>
                       ))}
@@ -226,7 +278,7 @@
             )}
 
             {/* SCHEDULE TAB */}
-            {tab==="schedule" && (
+            {!loading && tab==="schedule" && (
               <div className="fu">
                 <div style={{ display:"flex", flexWrap:"wrap", gap:14, alignItems:"flex-end", justifyContent:"space-between", marginBottom:28 }}>
                   <div>
@@ -239,7 +291,7 @@
                     </div>
                     <button onClick={generate} style={{ padding:"12px 22px", background:"linear-gradient(130deg,"+C.gold+",#b8893a)", border:"none", borderRadius:8, color:"#080500", fontFamily:"'Cinzel',serif", fontSize:11, fontWeight:700, letterSpacing:"0.14em", cursor:"pointer", height:47 }}>GENERATE</button>
                     {vmSubs.length > 0 && (
-                      <button onClick={() => { save(subs.filter(s => s.mk!==mk(vm.year,vm.month))); setSchedule(null); setSelected({}); }} style={{ padding:"12px 16px", background:"transparent", border:"1px solid "+C.danger, borderRadius:8, color:C.danger, fontFamily:"'Cinzel',serif", fontSize:11, cursor:"pointer", height:47 }}>CLEAR</button>
+                      <button onClick={clearMonth} style={{ padding:"12px 16px", background:"transparent", border:"1px solid "+C.danger, borderRadius:8, color:C.danger, fontFamily:"'Cinzel',serif", fontSize:11, cursor:"pointer", height:47 }}>CLEAR</button>
                     )}
                   </div>
                 </div>
@@ -307,7 +359,7 @@
                             </thead>
                             <tbody>
                               {vmSubs.map((s, idx) => (
-                                <tr key={s.id} style={{ borderTop:"1px solid "+C.border, background:idx%2===0?"transparent":"rgba(255,255,255,0.018)" }}>
+                                <tr key={idx} style={{ borderTop:"1px solid "+C.border, background:idx%2===0?"transparent":"rgba(255,255,255,0.018)" }}>
                                   <td style={{ padding:"11px 18px", color:C.text, whiteSpace:"nowrap" }}>{s.name}</td>
                                   <td style={{ padding:"11px 18px", minWidth:160 }}>
                                     <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
